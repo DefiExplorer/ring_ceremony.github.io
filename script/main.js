@@ -1,3 +1,4 @@
+import { initPetals, updatePetals } from './script/petals.js';
 let scene, camera, renderer, model;
 let usingDefaultModel = true;
 
@@ -36,6 +37,7 @@ async function init() {
 
     camera.position.z = 5;
     window.addEventListener('resize', onWindowResize);
+    initPetals(scene);
 }
 
 function createDefaultModel() {
@@ -65,6 +67,7 @@ function onWindowResize() {
 }
 
 function animate() {
+    updatePetals();
     requestAnimationFrame(animate);
     
     if(model) {
