@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-family: Arial;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Loading...</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, model;
+        let petals = [];
+        
+        // INITIAL SETUP
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Lighting
+            const light = new THREE.AmbientLight(0xffffff, 1);
+            scene.add(light);
+
+            // Load 3D model (Replace with your model)
+            const loader = new THREE.GLTFLoader();
+            loader.load('https://cdn.glitch.me/your-placeholder-model.glb', function(gltf) {
+                model = gltf.scene;
+                scene.add(model);
+                document.getElementById('loading').style.display = 'none';
+            });
+
+            camera.position.z = 5;
+            
+            // Petal texture
+            const petalTexture = new THREE.TextureLoader().load('https://cdn.glitch.me/petal.png');
+            
+            // Tap/Particle system
+            document.addEventListener('touchstart', createPetals);
+            document.addEventListener('mousedown', createPetals);
+        }
+
+        // CREATE PETALS
+        function createPetals() {
+            for(let i = 0; i < 15; i++) {
+                const geometry = new THREE.PlaneGeometry(0.2, 0.3);
+                const material = new THREE.MeshBasicMaterial({
+                    map: petalTexture,
+                    transparent: true
+                });
+                const petal = new THREE.Mesh(geometry, material);
+                
+                petal.position.set(
+                    Math.random() * 4 - 2,
+                    camera.position.y + 3,
+                    Math.random() * -5
+                );
+                
+                petals.push(petal);
+                scene.add(petal);
+            }
+        }
+
+        // ANIMATION
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate model
+            if(model) model.rotation.y += 0.002;
+            
+            // Animate petals
+            petals.forEach((petal, index) => {
+                petal.position.y -= 0.05;
+                petal.rotation.z += 0.05;
+                if(petal.position.y < -3) {
+                    scene.remove(petal);
+                    petals.splice(index, 1);
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
