@@ -1,148 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Ring Ceremony</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
-        #loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #ffffff;
-            font-family: Arial;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="loading">Loading Love Story...</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        let scene, camera, renderer, model;
-        let petals = [];
-        let usingDefaultModel = true;
-
-        // Procedural heart texture (base64 encoded)
-        const heartTexture = new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo4MjRGRTg0QzA3NjgxMUUzQkZGNDhENEJFQjM2OTcyRiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo4MjRGRTg0RDA3NjgxMUUzQkZGNDhENEJFQjM2OTcyRiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjgyNEZFODRBMDc2ODExRTNCRkY0OEQ0QkVCMzY5NzJGIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjgyNEZFODRCMDc2ODExRTNCRkY0OEQ0QkVCMzY5NzJGIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+Y7ZvUAAAA3hJREFUeNrsmT1LA0EQx2+DJpgiiKBFUAsrP4Ag2FjYiaCthY0fQBs/gJWVjY0fwMZCG0GxELEQxUJQQRARC0kRgprm/8BhyLLZvUtuYw78Ybi9vd3Zf83s7GVlWZYhM6osM0oD0AA0AA1AA9AANAANQAPQADQADUAD0AA0AA1AA9AANAANQAPQADQADUAD0AA0AA1AA9AANAANQAPQADQADUAD0AA0AA1AA9AANAANQAPQADQADUAD0AA0AA3gXwE0Yx6iHmHkM5zDMbzHBaAFB3E3wK4Dp3AVB4A27MMz3AnYteE4TqME0I5DuIRXAXY9OINTKAF04Cgu4G2AXR/O4SRKAF04hkt4H2A3gDM4jhJAD07gCj4E2A3hDI6iBNCHU7iKjwF2wziDoygBDOAMruFTgN0IzuAoSgDDOIvr+BxgN4YzOIoSwAjO4Qa+BNhN4AyOogQwhvO4iW8BdlM4g6MoAUzgAm7hR4DdDM7gKEoAU7iI2/gZ4DeHMziKEsAMLuEOfgX4LeAMjqIEMIcruIvfAX5LOIOjKAHM4yru4U+A3wrO4ChKAIu4hvv4G+C3hjM4ihLACq7jAf4F+K3jDI6iBLCGG3iI5wF+GziDoygBbOImHuFFgN8mzuAoSgDbuIXHeBngt4UzOIoSwA5u4zFeB/ht4wyOogSwhzt4gjcBfjs4g6MoAezjLp7ibYDfLs7gKEoAB7iHZ3gX4LeHMziKEsAh7uM5PgT47eMMjqIEcIQHeIGPAX77OIOjKAEc4yFe4lOA3wHO4ChKACd4hFf4HOB3iDM4ihLAKR7jNb4E+B3hDI6iBHCOJ3iDrwF+xziDoygBXOAp3uJbgN8JzuAoSgCXeIb3+B7gd4ozOIoSwBWe4wN+BPid4QyOogRwjRf4iJ8Bfuc4g6MoAdzgJT7hV4DfBc7gKEoAt3iFz/gd4HeJMziKEsA93uAL/gT4XeEMjqIE8IB3+Iq/AX5XOIOjKAE84j2+4V+A3zXO4ChKAE/4gB/4H+B3gzM4ihLAMz7iJ/4H+N3iDI6iBPCCT/iF/wF+dziDoygBvOIzfge8H3c4g6MoAbzjC34HvB/3OIOjKAF84Cv+BPg94AyOogTwiW/4G+D3iDM4ihLAF77jX4DfE87gKEoA3/iB/wF+zzj7L8A3AAMAl2IYIxTbwZsAAAAASUVORK5CYII=');
-
-        // Create default heart geometry
-        function createDefaultModel() {
-            const geometry = new THREE.SphereGeometry(1, 32, 32);
-            const material = new THREE.MeshPhongMaterial({
-                map: heartTexture,
-                transparent: true,
-                opacity: 0.9
-            });
-            return new THREE.Mesh(geometry, material);
-        }
-
-        // Check if asset exists
-        async function assetExists(url) {
-            try {
-                const response = await fetch(url, { method: 'HEAD' });
-                return response.ok;
-            } catch {
-                return false;
-            }
-        }
-
-        // Main initialization
-        async function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // Lighting
-            const light = new THREE.AmbientLight(0xffffff, 1);
-            scene.add(light);
-
-            // Try loading custom model first
-            const hasCustomModel = await assetExists('assets/model.glb');
-            
-            if(hasCustomModel) {
-                usingDefaultModel = false;
-                const loader = new THREE.GLTFLoader();
-                loader.load('assets/model.glb', function(gltf) {
-                    model = gltf.scene;
-                    scene.add(model);
-                    document.getElementById('loading').style.display = 'none';
-                });
-            } else {
-                model = createDefaultModel();
-                scene.add(model);
-                document.getElementById('loading').style.display = 'none';
-            }
-
-            camera.position.z = 5;
-            
-            // Create default petals if no texture found
-            if(!await assetExists('assets/petal.png')) {
-                createProceduralPetals();
-            }
-        }
-
-        // Create animated particles
-        function createProceduralPetals() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            
-            for(let i = 0; i < 100; i++) {
-                vertices.push(
-                    Math.random() * 10 - 5,
-                    Math.random() * 10,
-                    Math.random() * 10 - 5
-                );
-            }
-            
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            
-            const material = new THREE.PointsMaterial({
-                size: 0.1,
-                color: 0xff69b4,
-                transparent: true
-            });
-            
-            petals = new THREE.Points(geometry, material);
-            scene.add(petals);
-        }
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if(model) {
-                if(usingDefaultModel) {
-                    model.rotation.x += 0.01;
-                    model.rotation.y += 0.01;
-                } else {
-                    model.rotation.y += 0.002;
-                }
-            }
-            
-            if(petals) {
-                const positions = petals.geometry.attributes.position.array;
-                for(let i = 0; i < positions.length; i += 3) {
-                    positions[i + 1] -= 0.05;
-                    if(positions[i + 1] < -5) positions[i + 1] = 10;
-                }
-                petals.geometry.attributes.position.needsUpdate = true;
-            }
-            
-            renderer.render(scene, camera);
-        }
-
-        init();
-        animate();
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/GLTFLoader.js"></script>
+    <script src="script/main.js"></script>
+    <script src="script/petals.js"></script>
 </body>
 </html>
